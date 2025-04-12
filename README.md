@@ -1,6 +1,6 @@
 # Cybersecurity
 
-The repository is a **collection of resources and notes on various cybersecurity topics** designed to help learners and professionals enhance their understanding and skills in the field. It includes cheat sheets, best practices, and summaries on key areas such as penetration testing, network security, cryptography, and more. **No malicious code or offensive tools are present** in the repository, ensuring that it serves purely as an educational and informational resource.
+Various **resources and notes on various cybersecurity topics** designed to help learners and professionals enhance their understanding and skills in the field. It includes cheat sheets, best practices, and summaries on key areas such as penetration testing, network security, cryptography, and more. **No malicious code or offensive tools are present** in the repository, ensuring that it serves purely as an educational and informational resource.
 
 ## Gigs
 
