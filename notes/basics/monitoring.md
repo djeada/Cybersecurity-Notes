@@ -1,6 +1,4 @@
-
-
-## Monitoring and Auditing
+# Monitoring and Auditing
 
 ### Monitoring Methodologies
 
@@ -33,7 +31,9 @@ Effective monitoring is crucial for maintaining security and performance within 
 **Protocol Analyzer:**
 - **Function:** Captures and analyzes network traffic to identify and troubleshoot issues.
 - **Modes for Network Adapters:**
-  - **Promiscuous Mode:** Captures all traffic on the network, not just traffic intended for the adapter.
+  - **Promiscuous Mode:** Accepts frames delivered to the adapter even when addressed
+    to other hosts. It does not make a switched network deliver every frame;
+    appropriate capture placement, a mirror port, or a tap is still required.
   - **Non-Promiscuous Mode:** Captures only traffic addressed to the specific adapter.
 
 **Key Analysis Techniques:**
@@ -43,7 +43,8 @@ Effective monitoring is crucial for maintaining security and performance within 
 
 **Tools:**
 - **Wireshark:**
-  - **Promiscuous Mode Capturing:** Captures all network traffic.
+  - **Promiscuous Mode Capturing:** Captures frames visible at the capture interface;
+    visibility depends on network topology and capture placement.
   - **Port Mirroring:** Duplicates traffic from one port to another for monitoring purposes.
   - **Network Tap:** A dedicated device that copies traffic for analysis.
 - **Tcpdump (Unix/Linux):** A command-line packet analyzer.
@@ -90,7 +91,8 @@ Effective monitoring is crucial for maintaining security and performance within 
 
 **Auditing Files:**
 - **Capabilities:** Set auditing and logging for specific files, folders, and users.
-- **Review Logs:** Ensure non-repudiation and be aware of permission hierarchies.
+- **Review Logs:** Support accountability with protected, attributable records;
+  logging alone does not guarantee non-repudiation.
 
 ---
 
@@ -110,8 +112,26 @@ Effective monitoring is crucial for maintaining security and performance within 
 **Key Practices:**
 - **Log File Size Management:** Regularly monitor and configure log file sizes.
 - **Configuration and Encryption:** Ensure logs are securely configured and encrypted.
-- **Backups:** Regularly back up logs and manually clear them to prevent overflow.
+- **Retention:** Rotate and archive logs under a defined retention policy. Monitor
+  storage capacity and collection failures; do not routinely clear evidence.
+
+## Detection and response
+
+Centralize useful identity, endpoint, network, application, and cloud audit events.
+Synchronize clocks and retain timezone information. Record who did what, to which
+resource, when, and with what outcome, without logging passwords or access tokens.
+Protect access, transport, retention, and deletion of the records.
+
+A SIEM correlates events; EDR supplies endpoint visibility and response actions.
+Neither guarantees detection. Give each alert an owner, triage steps, and an
+escalation path. Review false positives, missed activity, and telemetry gaps.
+
+See [incident response](incident_response.md) and [digital forensics](digital_forensics.md).
+
+## Sources
+
+- [OWASP Logging Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Logging_Cheat_Sheet.html)
+- [Wireshark: capturing packets](https://www.wireshark.org/docs/wsug_html_chunked/ChapterCapture.html)
 
 **Auditing System Security Settings:**
 - **Management:** Use `compmgmt.msc` to manage shared folders and user privileges.
-

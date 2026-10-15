@@ -1,3 +1,5 @@
+# sqlmap
+
 Everytime we run it again it picks up when it left of and doesn't rerun everything but uses a file for caching info
 
 The image you provided shows a command being executed using `sqlmap`, a tool commonly used for automating SQL injection attacks. Here's a breakdown of the command:

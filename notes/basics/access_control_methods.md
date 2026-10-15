@@ -1,80 +1,64 @@
-## Access Control Methods and Models
+# Access Control Methods and Models
 
-### Access Control Models
+Authentication establishes an identity. Authorization decides which resources and
+actions that identity may access. Apply checks on each request, including access
+to a particular record or tenant.
 
-Access control models define how access to physical areas and computer systems is managed. Here are the key models:
+## Models
 
-1. **Discretionary Access Control (DAC)**
-   - Determined by the owner of the file or folder.
-   - The owner decides how each user or group accesses their file.
+| Model | How access is decided | Example |
+| --- | --- | --- |
+| Discretionary access control (DAC) | An owner grants permissions | A file owner grants read access |
+| Mandatory access control (MAC) | A centrally enforced policy compares labels and clearances | Classified records subject to a labeling policy |
+| Role-based access control (RBAC) | Permissions are assigned to roles held by users | A support role can view tickets |
+| Attribute-based access control (ABAC) | A policy evaluates subject, resource, action, and environment attributes | A managed device can access a record in an allowed region |
 
-2. **Mandatory Access Control (MAC)**
-   - The strictest form of access control, typically used on a need-to-know basis.
-   - Each user is given a clearance level and can only access files within that level (e.g., FOUO, Confidential, Secret, Top Secret).
-   - **Rule-Based Access Control:** Access is determined by comparing labels to clearance levels.
-   - **Lattice-Based Access Control:** More complex, involving set mathematics to determine access.
+Rule-based policies are not limited to MAC. No model is universally the
+“strictest”; the policy, implementation, and administration determine protection.
 
-3. **Role-Based Access Control (RBAC)**
-   - Access is controlled by a central authority.
-   - Various roles with overlapping privileges are assigned to users.
+## Operating principles
 
-4. **Attribute-Based Access Control (ABAC)**
-   - A dynamic and context-aware access control method.
+- Deny by default and grant only the privileges needed for a task.
+- Separate ordinary and administrative accounts and sensitive duties.
+- Review grants, group memberships, service accounts, and temporary access.
+- Revoke access when roles change or accounts are no longer needed.
+- Log security-relevant decisions and protect the resulting records.
 
-### Basic Access Control Practices
+SSO reduces repeated sign-in; it does not remove the need for per-application
+authorization or lifecycle management.
 
-1. **Implicit Deny**
-2. **Least Privilege**
-3. **Separation of Duties**
-4. **Job Rotation**
+## Filesystem permissions
 
-### Rights, Permissions, and Policies
+Windows NTFS supports explicit and inherited access-control entries. Review
+effective permissions and inheritance rather than assuming a single grant wins.
+Moving a file within the same NTFS volume generally retains its permissions;
+a copy or a move across volumes generally inherits destination permissions.
+Tools and options can preserve or replace permissions, so verify the result.
 
-### Users, Groups, and Permissions
+Linux mode bits and ACLs govern filesystem access, while additional controls
+such as SELinux or AppArmor can further restrict processes.
 
-**Windows Active Directory:**
-- Users can be added to specific Organizational Units (OUs) or the Users folder.
-- Logon times and valid login dates can also be configured.
-- Consolidate multiple accounts with Federated Identity Management/Single Sign-On (SSO).
-- Group users with similar permissions together.
+## Password and elevation policies
 
-**NTFS Permissions:**
-1. Full Control
-2. Modify
-3. Read & Execute
-4. List Folder Contents
-5. Read
-6. Write
+Favor long, unique passwords, compromised-password screening, password managers,
+and appropriate MFA. NIST SP 800-63B-4 requires at least 15 characters for a
+password used as a single factor; passwords used within MFA may be at least
+8 characters. It rejects mandatory composition rules and routine password changes
+without evidence of compromise.
 
-### Permission Inheritance and Propagation
+A Windows secure attention sequence such as `Ctrl + Alt + Delete` helps reach
+a trusted sign-in path when required by policy; it does not prove a user is local
+or prevent all remote logons.
 
-- The default behavior is that a child folder inherits the permissions of its parent folder.
-- This behavior cannot be changed without disabling permission inheritance.
-- **Moving vs Copying Data:**
-  - **Copy:** Inherits the permissions of the destination folder.
-  - **Move:** Retains the original permissions.
+User Account Control (UAC) prompts for consent or credentials when elevation is
+needed. It is not a replacement for least privilege or a security boundary
+against code already running with appropriate user rights.
 
-### Username and Passwords
+See [authentication models](authentication_models.md) and
+[web application security](web_application_security.md).
 
-- Weak and old passwords are common avenues for data exfiltration.
-- Never use default usernames and passwords, especially for administrative accounts.
-- Disable guest and unnecessary accounts.
-- Use `Ctrl + Alt + Delete` to log in, ensuring users are using a keyboard rather than a network connection.
-- Implement policy management to enforce security.
+## Sources
 
-### Policies
-
-Policies are enforced rules configured either on individual machines or across a network.
-
-**Password Policies:**
-1. Enforce password history.
-2. Minimum and maximum password age.
-3. Minimum password length.
-4. Complexity requirements.
-
-- Most policies are configured at the OS level with an Active Directory (AD) domain controller.
-
-### UAC (User Account Control)
-
-- By default, UAC keeps all non-admin users without full administrative rights.
-
+- [OWASP Authorization Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html)
+- [NIST SP 800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html)
+- [Microsoft: UAC overview](https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/)

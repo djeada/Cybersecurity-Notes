@@ -1,3 +1,5 @@
+# Username Research
+
 ### Username Search Tools
 
 1. **WhatsMyName:**   [https://whatsmyname.app/](https://whatsmyname.app/)  A tool that allows you to search across various platforms to see if a given username is being used. It provides a list of websites where the username is registered.

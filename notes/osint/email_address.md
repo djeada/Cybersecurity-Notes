@@ -1,4 +1,4 @@
-## Email Address Security
+# Email Address Security
 
 Email addresses are a critical part of our online identities, often serving as the primary means of communication, authentication, and account recovery. However, they also present a significant security risk if not properly protected. Attackers can exploit email addresses to launch phishing campaigns, perform social engineering attacks, or gain unauthorized access to online accounts. For penetration testers, understanding how email addresses can be discovered, exploited, and protected is essential in evaluating an organization’s security posture.
 

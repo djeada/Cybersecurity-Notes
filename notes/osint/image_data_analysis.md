@@ -1,4 +1,4 @@
-## Image Data Analysis
+# Image Data Analysis
 
 Image data analysis is a critical component of both penetration testing and OSINT (Open Source Intelligence) investigations. Images often contain hidden metadata that can reveal sensitive information, such as the device used to capture the image, the location where it was taken, and the exact time it was created. Analyzing this data can help uncover important details that may not be immediately visible in the image itself. Tools used in this analysis are designed to extract and interpret this metadata, which can then be used for various investigative purposes.
 
@@ -50,4 +50,3 @@ TODO:
 4. **Educate Users on Image Security:**
    - **Description:** Educate employees and users about the risks associated with sharing images online, particularly those that may contain sensitive metadata.
    - **Impact:** Increased awareness helps prevent inadvertent exposure of personal or corporate information through images.
-

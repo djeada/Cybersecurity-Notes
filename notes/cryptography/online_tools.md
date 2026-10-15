@@ -1,12 +1,26 @@
-## Online Tools for Hash Cracking
+# Online Hash Tools
 
-If you're looking to use online tools for cracking these hashes, there are several options available:
+A hash lookup service compares submitted digests with known inputs or guesses
+candidate inputs. It does not “decrypt” a one-way hash. Success with a weak or
+common password does not imply the underlying algorithm is reversible.
 
-- **[MD5Decrypt.net](https://md5decrypt.net/en/)**: This site supports a variety of hash types including MD5, SHA-1, and SHA-256. It's particularly useful for quick lookups of common hashes.
--  **[ShadowCrypt](https://shadowcrypt.net/decrypt)**: A versatile online tool that supports decrypting hashes such as MD5, SHA-1, SHA-256, and more. It claims to utilize a vast database of known hashes to deliver results quickly.
-- **[OnlineHashCrack](https://www.onlinehashcrack.com/)**: A professional cloud-based service that supports numerous hashing algorithms, including bcrypt, SHA-512, and others. It’s a robust option if you have more complex needs, such as handling multiple hashes at once or requiring specific algorithms.
+## Data handling
 
-### Recommendations
+A password hash can be sensitive credential material. Uploading it gives another
+party a copy that may be retained or attacked later. Do not submit organizational
+or personal credential data without explicit authorization and an appropriate
+data-handling agreement.
 
-- When using online tools, be cautious about uploading sensitive data. Always ensure that the platform you are using is trustworthy, as uploading password hashes can potentially expose them to third parties.
-- For more secure environments, it's recommended to use local tools like John the Ripper or Hashcat, which provide greater control and security over your data.
+For learning, use synthetic values and known examples. Prefer local,
+authorized password-auditing workflows when handling sensitive material:
+
+- [Hashcat](../../tools/password_cracking/hashcat/README.md)
+- [John the Ripper rules](../../tools/password_cracking/john_ripper/custom_rules.md)
+
+Use [modern password storage](hashes_intro.md#password-storage) to make offline
+guessing more expensive. A service's claim to support a hash type is not evidence
+that it can recover every input.
+
+## Sources
+
+- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)

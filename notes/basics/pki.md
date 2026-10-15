@@ -1,120 +1,71 @@
-## PKI and Encryption Protocols
+# PKI and TLS
 
-### PKI (Public Key Infrastructure)
+Public Key Infrastructure (PKI) manages certificates, issuers, trust anchors,
+and key lifecycles. An X.509 certificate binds a public key to an identity or
+name; it does not by itself make a service trustworthy.
 
-PKI is a system of trust that uses public key cryptography to bind a certificate to an identity.
+## Certificate validation
 
-**Certificates:**
-- **Definition:** Digitally signed electronic documents that bind a public key with an entity.
-- **Format:** Mostly based on the X.509 format to facilitate Single Sign-On (SSO).
-- **Contents:**
-  - **User Information and Public Key**
-  - **Certificate Authority Information:** Includes the name, digital signature, serial number, and issue/expiration date.
-- **Usage:** Primarily used for HTTPS connections but can also be utilized for local encryption.
+A client builds a chain from a leaf certificate through intermediate issuers
+to a root in its configured trust store. It checks signatures, validity dates,
+constraints, intended usage, the requested hostname, and applicable revocation
+policy. The peer also proves possession of the private key.
 
-**Types of SSL Certificates:**
-- **Domain Validation (DV):** Validates domain ownership.
-- **Organizational Validation (OV):** Validates the organization behind the domain.
-- **Extended Validation (EV):** Provides the highest level of validation, including the organization's legal identity.
-- **Wildcard Certificates:** Secure an unlimited number of subdomains under a single domain.
+- **Domain Validation (DV):** Validates control of the domain.
+- **Organization Validation (OV) / Extended Validation (EV):** Include additional
+  identity checks. They do not make the TLS encryption stronger.
+- **Wildcard:** A name such as `*.example.com` generally matches one label,
+  such as `api.example.com`, not `a.api.example.com` or the bare domain.
+- **Mutual TLS (mTLS):** Both client and server authenticate with certificates.
 
-**Single-Sided vs. Double-Sided Certificates:**
-- **Single-Sided:** Validates the server to its users/clients.
-- **Double-Sided:** Both the server and the user validate each other.
+CRLs and OCSP provide revocation information; actual checking behavior depends
+on the client and policy. Automate renewal, monitor expiry and issuance failures,
+protect private keys, and plan replacement after compromise.
 
----
+## Formats and encoding
 
-### Certificate Chain of Trust
+| Format | Description |
+| --- | --- |
+| DER | Binary ASN.1 encoding using Distinguished Encoding Rules |
+| PEM | Base64-encoded data between labels such as `BEGIN CERTIFICATE` |
+| PKCS #12 / PFX | Container that can include certificates and private keys |
 
-The Certificate Chain of Trust is used to validate different pieces of hardware and software, providing scalability and flexibility in managing certificates.
+BER, CER, and DER are encoding rules defined by X.690, not X.609. Filename
+extensions are conventions: inspect the content and labels. A `.pem` file can
+contain a certificate, key, chain, or a combination. Protect exported private keys
+and any associated passwords.
 
-**Certificate Formats:**
-- **Identifying Formats by Extension and Encoding:**
-  - **X.609 Encoding Rules:**
-    - **BER (Basic Encoding Rule)**
-    - **CER (Canonical Encoding Rule)**
-    - **DER (Distinguished Encoding Rule)**
+## TLS
 
-**Common Certificate Formats and Extensions:**
-1. **PEM:**
-   - **Encoding:** ASCII encoded, contains "Begin/End Certificate" statements.
-   - **Extensions:** .pem, .crt, .cer, .key
-   - **Details:** Uses DER encoding, with .der in pure binary.
+Prefer TLS 1.3 and allow properly configured TLS 1.2 when compatibility requires
+it. Disable SSL, TLS 1.0, and TLS 1.1.
 
-2. **P12/PFX:**
-   - **Encoding:** Pure binary.
-   - **Extensions:** .pfx, .p12
-   - **Usage:** Used to import/export certificates and private keys.
+TLS combines peer authentication, key establishment, and symmetric authenticated
+encryption. In TLS 1.3, key establishment can use ephemeral (EC)DHE or pre-shared
+keys; RSA key transport was removed. An RSA certificate can still be used for
+signature-based authentication. Certificate validation remains essential.
 
----
+A TLS terminator decrypts traffic at its boundary. Consider protection and
+authentication on the next hop rather than assuming the entire path is encrypted.
 
-### Certificate Authorities (CA)
+## Related protocols
 
-A Certificate Authority (CA) is an entity, typically a server, that issues certificates to users, acting as a trusted third party often used in HTTPS connections.
+- **SSH:** Authenticated remote sessions and file transfer. Verify host keys;
+  public-key user authentication does not replace server authentication.
+- **S/MIME:** Certificate-based email signing and encryption; encryption is a
+  separate capability from signing.
+- **IPsec:** Protects IP traffic. ESP can provide confidentiality and integrity;
+  AH provides integrity and authentication without encryption. Tunnel mode
+  encapsulates an inner IP packet; the outer header remains visible.
+- **L2TP:** Tunneling without encryption on its own; often paired with IPsec.
+- **PPTP:** Legacy VPN technology with serious security weaknesses; avoid new use.
 
-- **Certificate Details:** Clicking on the HTTPS padlock in a browser allows viewing of certificate details.
-- **Certification Revocation List (CRL):** Invalid certificates are placed on this list.
-- **SSL Pinning:** Attempts to prevent Man-in-the-Middle (MitM) attacks by ensuring the certificate used is the one expected.
-- **Online Certificate Status Protocol (OCSP):** Used to verify certificate status in real-time.
-- **Key Escrow:** A service that stores private keys securely.
-- **Key Recovery Agent:** A trusted entity that can recover lost keys.
-- **CA Hierarchy:** Often involves an offline root CA for added security.
+See [digital signatures](../cryptography/signature_and_certificates.md),
+[encryption](../cryptography/encryption.md), and [VPNs](vpn.md).
 
-**Web of Trust:**
-- **Definition:** A decentralized system where certificates are self-signed and published.
-- **Usage:** Commonly used by PGP (Pretty Good Privacy).
+## Sources
 
----
-
-### Security Protocols
-
-**Overview of Common Security Protocols:**
-- **Email:** S/MIME, PGP
-- **Web Login:** SSL, TLS
-- **Direct Connections:** SSH
-- **Virtual Connections:** PPTP, L2TP
-
----
-
-### S/MIME (Secure/Multipurpose Internet Mail Extensions)
-
-S/MIME is used for email security, providing authentication, message integrity, and non-repudiation. It requires a digital ID certificate in applications like MS Outlook to function.
-
----
-
-### SSL/TLS (Secure Sockets Layer / Transport Layer Security)
-
-SSL/TLS are protocols used for secure internet communication, such as web browsing, VoIP, and email. They rely on PKI for obtaining and validating certificates.
-
-- **Encryption:** Uses asymmetric encryption (public key) for establishing a session and symmetric encryption (session key) for data transmission.
-- **Accelerators:** SSL/TLS accelerators can be used to offload the encryption/decryption process.
-- **Usage:** Widely used in e-commerce through HTTPS.
-- **Vulnerabilities:** Susceptible to downgrade attacks, such as FREAK and DROWN.
-
----
-
-### SSH (Secure Shell)
-
-SSH uses public key cryptography to establish remote authenticated connections. It also serves as the basis for secure file transfer protocols like SFTP and SCP.
-
----
-
-### PPTP, L2TP, and IPSec
-
-**PPTP (Point-to-Point Tunneling Protocol):**
-- **Usage:** Primarily used for VPNs.
-- **Security:** Supports PPP packets but is considered insecure in most cases due to lack of encryption.
-
-**L2TP (Layer 2 Tunneling Protocol):**
-- **Security:** By default, L2TP does not include encryption but becomes powerful when combined with IPSec.
-- **PKI:** Uses PKI when installed on Windows servers.
-
-**IPSec (Internet Protocol Security):**
-- **Function:** Authenticates and encrypts IP packets, operating at the Network layer of the OSI model.
-- **Components:**
-  1. **Security Association (SA)**
-  2. **Authentication Header (AH)**
-  3. **Encapsulating Security Payload (ESP)**
-- **Modes of Implementation:**
-  1. **Transport Mode:** Encrypts the packet payload, typically used within a LAN or private network.
-  2. **Tunnel Mode:** Encrypts the entire packet, facilitating secure VPN connections through the internet.
+- [RFC 5280: X.509 certificate profile](https://www.rfc-editor.org/rfc/rfc5280.html)
+- [RFC 9325: TLS deployment recommendations](https://www.rfc-editor.org/rfc/rfc9325.html)
+- [RFC 8446: TLS 1.3](https://www.rfc-editor.org/rfc/rfc8446.html)
+- [RFC 4301: IPsec architecture](https://www.rfc-editor.org/rfc/rfc4301.html)

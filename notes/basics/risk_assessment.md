@@ -1,4 +1,4 @@
-## Vulnerability and Risk Assessment
+# Vulnerability and Risk Assessment
 
 ### Conducting Risk Assessment
 

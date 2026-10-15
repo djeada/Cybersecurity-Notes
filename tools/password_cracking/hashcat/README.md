@@ -1,3 +1,5 @@
+# Hashcat
+
 **Hashcat** is a popular and powerful password-cracking tool used in cybersecurity, penetration testing, and ethical hacking. It is designed to recover passwords from hashes, which are fixed-length representations of data that have been processed through a cryptographic hash function. Hashes are commonly used to store passwords securely, but if a weak or compromised hash is found, tools like Hashcat can be used to attempt to recover the original plaintext password.
 
 ### Key Features and Purposes of Hashcat:

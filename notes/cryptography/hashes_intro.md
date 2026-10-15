@@ -1,52 +1,63 @@
-## Hashing Basics
+# Hashing and Password Storage
 
-### What are Hashes?
-- **Definition:** A hash is a way of taking a piece of data of any length and representing it in a fixed-length form. This masks the original value of the data by running it through a hashing algorithm.
-- **Example:** 
-  - For "polo" (4 characters) using MD5: `b53759f3ce692de7aff1b5779d3964da`
-  - For "polomints" (9 characters) using MD5: `584b6e4f4586e136bc280f27f9c64f3b`
+A cryptographic hash maps arbitrary input to a fixed-size digest. It is
+deterministic and is not encryption: there is no decryption key. Low-entropy
+inputs such as common passwords can still be guessed and checked against a digest.
 
-### Purpose of Hashing
-- **Integrity:** Ensures message integrity by producing a fixed-size hash value from variable-sized data.
-- **Security:** Hashing functions are designed as one-way functions, making it computationally infeasible to reverse the process (i.e., finding the original input from the hash).
+## Security properties
 
-### Cryptographic Hash Functions
-- **MD5 (Message Digest 5):**
-  - Commonly used for file integrity verification.
-  - Vulnerable to hash collision attacks.
-  
-- **SHA (Secure Hash Algorithm):**
-  - **Current Standard:** SHA-2 (256/512 bits).
-  - **Purpose:** Provides enhanced security over MD5.
+- **Preimage resistance:** Given a digest, finding an input with that digest
+  should be infeasible.
+- **Second-preimage resistance:** Given one input, finding a different input with
+  the same digest should be infeasible.
+- **Collision resistance:** Finding any two distinct inputs with the same digest
+  should be infeasible. A birthday attack targets this property; it does not
+  require matching a specific original message.
 
-- **RIPEMD & HMAC:**
-  - **RIPEMD:** A family of cryptographic hash functions.
-  - **HMAC (Hash-based Message Authentication Code):** Combines a hash function with a secret key for added security.
+Use a modern digest such as SHA-256 or SHA-3 for security-sensitive hashing.
+MD5 and SHA-1 have broken collision resistance and are unsuitable for new
+security-sensitive integrity or signature designs.
 
-### Windows Hashing Mechanisms
-- **LANMAN:**
-  - An older Windows password hash based on DES, now deprecated and a security liability.
-  - **Recommendation:** Disable via registry or local security policy.
-  
-- **NTLM (New Technology LAN Manager):**
-  - Based on RC4, now considered insecure.
-  
-- **NTLMv2:**
-  - Utilizes HMAC-MD5; however, Kerberos is preferred for most Windows environments.
+## Integrity is not authenticity
 
-## Hashing Attacks
+A checksum detects changes only if the expected digest is trustworthy. An attacker
+who replaces both a file and its published digest can defeat that comparison.
+Use authenticated distribution, a digital signature, or an HMAC with an
+appropriately managed secret key when authenticity matters.
 
-### Pass the Hash
-- **Method:** Uses a stored hash value to initiate an authenticated session without needing the plaintext password.
-- **Target:** Often used against Windows/Kerberos in Single Sign-On (SSO) environments.
-- **Mitigation:** Use unique session tokens, multifactor authentication, and least privilege principles.
+Try the [file hash utility](../../src/README.md) with a harmless file and a known
+SHA-256 digest.
 
-### Birthday Attack
-- **Description:** Attempts to produce a hash collision with the original message.
-- **Target:** Hash functions with weak collision resistance.
+## Password storage
 
-### Additional Hashing Concepts
-- **Key Stretching / Salting:** 
-  - **Purpose:** Enhances the security of stored passwords by adding random data (salt) or stretching the hash computation.
-  - **Effect:** Makes brute-force attacks more difficult by increasing the computational work required to generate a hash.
+General-purpose hashes such as SHA-256 are intentionally fast and are not suitable
+password-storage functions on their own.
 
+- Use a password hashing scheme such as Argon2id with parameters appropriate to
+  the environment. Follow maintained guidance for alternatives and required
+  compliance constraints.
+- A **salt** is a unique, nonsecret random value stored with each password hash.
+  It prevents shared hashes for identical passwords and reuse of precomputed work.
+- A **work factor** increases the cost of each guess; memory-hard schemes also
+  require memory. Tune parameters and plan to upgrade them over time.
+- A **pepper** is an optional secret stored separately from the password database.
+  Its lifecycle and recovery need careful design.
+
+Salting and increasing computational cost solve different problems. A salt alone
+does not make each password guess substantially slower.
+
+## Windows terminology
+
+The NT password hash is based on MD4 over a UTF-16LE password, not RC4. NTLM is an
+authentication protocol family; NTLMv2 uses HMAC-MD5 in its response calculation.
+Pass-the-hash abuses password-equivalent material in NTLM authentication.
+Kerberos ticket abuse is a distinct technique.
+
+See [Windows hashes](windows_hashes.md),
+[Linux hashes](linux_user_hashes.md), and [digital signatures](signature_and_certificates.md).
+
+## Sources
+
+- [NIST Secure Hash Standard](https://csrc.nist.gov/pubs/fips/180-4/upd1/final)
+- [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+- [Microsoft: NTLM overview](https://learn.microsoft.com/en-us/windows-server/security/kerberos/ntlm-overview)

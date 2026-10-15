@@ -1,0 +1,3 @@
+# Optional dependencies for network lookup examples in src/.
+requests
+python-whois
