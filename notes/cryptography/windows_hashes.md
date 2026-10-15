@@ -1,10 +1,12 @@
-## Cracking Windows Hashes
+# Cracking Windows Hashes
 
 Gaining access to authentication hashes on a Windows system can be a crucial step in penetration testing or red team activities. These hashes, particularly the **NTHash** or **NTLM** format, are used by modern Windows operating systems to store user and service passwords.
 
 ### NTLM Overview
 
-- **NTLM (NT LAN Manager):** A suite of Microsoft security protocols that provide authentication, integrity, and confidentiality to users. NTLM is an evolution of the older LAN Manager (LM) hash and is the format in which modern Windows systems store passwords. The "NT" in NTLM refers to "New Technology," originating from Windows NT, the first version of Windows independent of MS-DOS.
+- **NT password hash:** MD4 over the UTF-16LE password, without a per-password salt.
+  It is often called an NTLM hash, but the stored hash is distinct from an NTLM
+  challenge-response exchange. NTLM is an authentication protocol family.
 
 ### Acquiring NTLM Hashes
 
@@ -28,7 +30,9 @@ To crack NTLM hashes, you first need to obtain them, typically requiring elevate
 
 ### Cracking NTLM Hashes
 
-Once you have obtained the NTLM hashes, you can attempt to crack them using tools like **John the Ripper** or **Hashcat**. Although NTLM is a robust hashing algorithm, weak passwords can often be cracked, especially with the use of wordlists.
+In an authorized lab, NT password hashes can be audited with John the Ripper or
+Hashcat. They are fast, unsalted password hashes and are not a robust modern
+password-storage design. Weak passwords are especially susceptible to guessing.
 
 #### Example of Using John the Ripper:
 ```bash
@@ -43,10 +47,21 @@ In some scenarios, cracking the hash may not be necessary. **Pass-the-Hash (PtH)
 ### Defensive Measures
 
 1. **Enforce Strong Password Policies:**
-   - **Purpose:** Ensure that complex passwords are required and changed regularly to reduce the likelihood of successful hash-based attacks.
+   - **Purpose:** Use long, unique passwords and compromised-password screening;
+     change exposed passwords and revoke affected sessions rather than relying
+     on arbitrary periodic resets.
 
 2. **Enable SMB Signing:**
-   - **Purpose:** Enabling SMB signing helps prevent Man-in-the-Middle attacks that capture NTLM hashes.
+   - **Purpose:** Require SMB signing where supported to protect SMB integrity and
+     mitigate relevant relay attacks. It does not prevent credential extraction
+     from an already compromised endpoint or every pass-the-hash scenario.
 
 3. **Use Multi-Factor Authentication (MFA):**
-   - **Purpose:** MFA adds an additional layer of security, making it harder for attackers to succeed even if they obtain password hashes.
+   - **Purpose:** Apply MFA where the authentication flow supports it. Do not assume
+     MFA on an interactive login also protects every legacy NTLM service. Reduce
+     NTLM use, restrict administrative privileges, and avoid reused local-admin passwords.
+
+## Sources
+
+- [Microsoft NTLM overview](https://learn.microsoft.com/en-us/windows-server/security/kerberos/ntlm-overview)
+- [Microsoft SMB signing overview](https://learn.microsoft.com/en-us/windows-server/storage/file-server/smb-signing-overview)

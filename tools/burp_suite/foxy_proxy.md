@@ -1,3 +1,5 @@
+# Burp Suite
+
 Here's a step-by-step guide on how to configure the FoxyProxy addon for your browser:
 
 ### Step 1: Install FoxyProxy Addon
@@ -55,5 +57,3 @@ To set this, click on the FoxyProxy icon and choose the desired mode from the dr
 ### Additional Tips:
 - **URL Patterns:** You can configure FoxyProxy to only use the proxy for specific URLs or domains by setting up patterns. This is useful if you only want to route certain traffic through the proxy.
 - **Multiple Proxies:** If you have multiple proxy configurations, you can easily switch between them using the FoxyProxy icon in your toolbar.
-
-

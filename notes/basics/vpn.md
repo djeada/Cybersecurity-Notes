@@ -1,12 +1,18 @@
-## VPN (Virtual Private Network)
+# VPN (Virtual Private Network)
 
-A Virtual Private Network (VPN) is a service that creates a secure, encrypted connection between a user's device and a remote server operated by the VPN provider. This connection masks the user's IP address, making their online actions virtually untraceable and protecting their data from being intercepted over public or untrusted networks.
+A Virtual Private Network (VPN) creates a protected tunnel between endpoints,
+such as a device and an organizational gateway or two private networks. A
+consumer VPN can change the public source IP seen by destinations. It does not
+guarantee anonymity, hide logged-in identities, or secure a compromised endpoint.
 
 ### Key Functions of a VPN
 
 1. **Anonymizing IP Address:**
-   - **Description:** VPNs hide the user's real IP address by routing their internet traffic through a server operated by the VPN provider. This server assigns a different IP address to the user, effectively masking their true location and identity online.
-   - **Consideration:** While a VPN anonymizes your IP address, it requires complete trust in the VPN provider, as they have the ability to monitor and log your internet activity.
+   - **Description:** For traffic routed through the tunnel, destinations generally
+     see the VPN exit's source address. Accounts, cookies, fingerprints, and other
+     metadata can still identify the user.
+   - **Consideration:** Trust shifts toward the VPN operator. Check which traffic,
+     DNS requests, and IPv6 routes are actually included in the tunnel.
 
 2. **Encrypting Data Traffic:**
    - **Description:** VPNs encrypt data traffic between the user's device and the VPN server, making it unreadable to anyone who intercepts it. This is particularly important when using public Wi-Fi networks.
@@ -22,11 +28,16 @@ A Virtual Private Network (VPN) is a service that creates a secure, encrypted co
 ### Common VPN Vulnerabilities and Concerns
 
 1. **Trust in the VPN Provider:**
-   - **Description:** The VPN provider can see all your internet traffic since it acts as the intermediary between your device and the internet. This necessitates complete trust in the provider not to log or misuse your data.
-   - **Mitigation:** Choose a VPN provider with a strict no-logs policy and transparency about its data practices. Opt for open-source VPNs like Mullvad, which allow for greater scrutiny of their operations.
+   - **Description:** The operator can observe connection metadata and any
+     unencrypted traffic leaving the tunnel. End-to-end HTTPS still protects its
+     encrypted application content from the VPN operator.
+   - **Mitigation:** Assess operational practices, independent evidence, and the
+     trust model. Open client source code or a no-logs claim alone does not prove
+     how the service is operated.
 
 2. **VPN Server Compromise:**
-   - **Description:** If a VPN server is compromised, an attacker could potentially intercept and decrypt user data, leading to a breach of privacy.
+   - **Description:** A compromised gateway can expose tunnel traffic and metadata;
+     it does not automatically decrypt independently protected HTTPS content.
    - **Mitigation:** Regularly update server software, use secure VPN protocols, and employ multi-factor authentication for server access.
 
 3. **DNS Leaks:**
@@ -43,20 +54,26 @@ A Virtual Private Network (VPN) is a service that creates a secure, encrypted co
 
 6. **Poor Logging Policies:**
    - **Description:** Some VPN providers may log user activity, which could be accessed by law enforcement or other entities. This logging undermines the privacy protection that VPNs are supposed to provide.
-   - **Mitigation:** Use VPNs with a strict no-logs policy. Mullvad, for example, is known for its commitment to user privacy and minimal data collection.
+   - **Mitigation:** Evaluate retention, access controls, transparency, and available
+     evidence rather than treating a marketing claim as a technical guarantee.
 
 ### Best Practices for Secure VPN Usage
 
 1. **Choose a Reputable VPN Provider:**
-   - **Description:** Select a VPN provider with a strong reputation for privacy and security. Preferably, choose open-source VPNs like Mullvad, where the source code is publicly available for inspection.
+   - **Description:** Select a maintained implementation and an operator whose
+     access controls, update process, and data practices fit the threat model.
    - **Consideration:** Ensure the provider operates in a jurisdiction with strong privacy laws and is not subject to intrusive government surveillance.
 
 2. **Use Strong Encryption Protocols:**
-   - **Description:** Configure your VPN to use robust encryption protocols like OpenVPN or WireGuard with AES-256 encryption to ensure data security.
+   - **Description:** Use a maintained protocol and its supported secure configuration.
+     WireGuard uses ChaCha20-Poly1305, not AES-256. OpenVPN and IPsec have their own
+     configurable algorithms and authentication requirements.
    - **Impact:** Strong encryption protects your data from being intercepted or decrypted by unauthorized parties.
 
 3. **Enable Kill Switch:**
-   - **Description:** Always enable the kill switch feature to prevent data leakage if the VPN connection drops. This is crucial for maintaining your anonymity and privacy.
+   - **Description:** Where the threat model requires traffic to stay within the
+     tunnel, enable and test traffic-blocking behavior during disconnects,
+     including DNS and IPv6. It is not a guarantee of anonymity.
    - **Impact:** Prevents accidental exposure of your real IP address and unencrypted data.
 
 4. **Regularly Update VPN Software:**
@@ -98,3 +115,7 @@ A Virtual Private Network (VPN) is a service that creates a secure, encrypted co
    - **Objective:** Test the strength of authentication mechanisms used by the VPN, including the security of stored credentials and the implementation of multi-factor authentication (MFA).
    - **Tools:** Hydra, John the Ripper for password cracking; Burp Suite for web-based authentication testing.
 
+## Sources
+
+- [WireGuard protocol and cryptography](https://www.wireguard.com/protocol/)
+- [NIST SP 800-77 Rev. 1: IPsec VPNs](https://csrc.nist.gov/pubs/sp/800/77/r1/final)

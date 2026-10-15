@@ -1,5 +1,4 @@
-
-## Securing Other Applications
+# Securing Other Applications
 
 ### Principle of Least Functionality
 - **Concept:** Only provide users with the tools they need for their job functions, reducing unnecessary risk.

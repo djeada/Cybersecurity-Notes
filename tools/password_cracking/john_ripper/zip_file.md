@@ -1,3 +1,5 @@
+# John the Ripper: ZIP Files
+
 Cracking a Password Protected Zip File
 
 Yes! You read that right. We can use John to crack the password on password protected Zip files. Again, we're going to be using a separate part of the john suite of tools to convert the zip file into a format that John will understand, but for all intents and purposes, we're going to be using the syntax that you're already pretty familiar with by now.

@@ -1,3 +1,5 @@
+# John the Ripper: RAR Archives
+
 Cracking a Password Protected RAR Archive
 
 We can use a similar process to the one we used in the last task to obtain the password for rar archives. If you aren't familiar, rar archives are compressed files created by the Winrar archive manager. Just like zip files they compress a wide variety of folders and files.

@@ -1,4 +1,4 @@
-## Cracking Hashes from `/etc/shadow`
+# Cracking Hashes from `/etc/shadow`
 
 ### Overview
 
@@ -49,9 +49,15 @@
 ### Important Considerations
 
 - **Hash Formats:** Different hashing algorithms are indicated by specific prefixes in the `/etc/shadow` file:
-  - `$1$` = MD5
-  - `$5$` = SHA-256
-  - `$6$` = SHA-512
+  - `$1$` = MD5-crypt (legacy)
+  - `$5$` = SHA-256-crypt
+  - `$6$` = SHA-512-crypt
+  - `$y$` = yescrypt, used by some current distributions
+
+  These are password-hashing schemes, not plain hashes of the password. Defaults
+  vary by distribution and configuration; inspect the prefix rather than assuming
+  SHA-512-crypt. Locked or disabled password fields may contain `!` or `*` rather
+  than a usable hash. Protect exports of `/etc/shadow` as sensitive credentials.
 
 - **Security Implications:** Successfully cracking a password hash can give an attacker unauthorized access to the associated user account. It highlights the importance of using strong passwords, implementing salting, and regularly auditing system security.
 

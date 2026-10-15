@@ -1,4 +1,4 @@
-## Breached Passwords
+# Breached Passwords
 
 Data breaches involving passwords are among the most significant security incidents, often leading to severe consequences for individuals and organizations. When passwords are leaked in a data breach, they can be exploited by attackers to gain unauthorized access to user accounts, perform credential stuffing, or compromise entire networks. Penetration testers frequently use breached password databases to assess the strength of user passwords and identify vulnerabilities in systems.
 
@@ -63,4 +63,3 @@ Penetration testers and security professionals often use various databases and t
 3. Implement MFA across all accounts to provide an additional layer of security beyond just passwords. Even if a password is breached, MFA can prevent unauthorized access.
 4. Regularly educate users about the risks of password reuse and the importance of using strong, unique passwords for different services.
 5. Enforce policies that require users to create complex passwords that are difficult to crack and ensure that passwords are hashed using strong algorithms like bcrypt or Argon2.
-

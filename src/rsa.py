@@ -1,195 +1,81 @@
-"""
-RSA Cryptographic Functions
-============================
+"""Textbook RSA arithmetic for learning only.
 
-This module provides a set of functions to perform RSA encryption and decryption, including 
-modular exponentiation, the Extended Euclidean algorithm, and message signing and verification.
+These tiny keys and raw operations are insecure: there is no secure padding,
+cryptographic key generation, or side-channel protection. Production encryption
+and signatures require maintained libraries and schemes such as OAEP and PSS.
 
-Mathematical Background
------------------------
-
-### Modular Exponentiation
-
-Given a base \( b \), an exponent \( e \), and a modulus \( m \), the goal is to efficiently compute:
-
-\[
-b^e \mod m
-\]
-
-This is achieved using the method of **exponentiation by squaring**, which reduces the number of multiplicative operations 
-by breaking down the exponentiation process. The process can be described as:
-
-\[
-\text{result} = 1 \quad \text{(initially)}
-\]
-\[
-b = b \mod m
-\]
-\[
-\text{while } e > 0:
-\]
-\[
-\quad \text{if } e \mod 2 = 1:
-\]
-\[
-\quad \quad \text{result} = (\text{result} \times b) \mod m
-\]
-\[
-\quad e = \left\lfloor \frac{e}{2} \right\rfloor
-\]
-\[
-\quad b = (b \times b) \mod m
-\]
-
-The final value of `result` is the desired output \( b^e \mod m \).
-
-### Extended Euclidean Algorithm
-
-Given two integers \( a \) and \( b \), the Extended Euclidean algorithm finds integers \( x \) and \( y \) 
-such that:
-
-\[
-ax + by = \gcd(a, b)
-\]
-
-The greatest common divisor \( \gcd(a, b) \) can be expressed as a linear combination of \( a \) and \( b \) 
-using the Extended Euclidean algorithm, which also provides a way to compute the multiplicative inverse 
-modulo \( \phi(N) \) in the context of RSA.
-
-### RSA Key Generation and Message Signing
-
-1. **RSA Key Components**: Choose two large prime numbers \( p \) and \( q \), then compute:
-
-\[
-N = p \times q
-\]
-
-\[
-\phi(N) = (p-1) \times (q-1)
-\]
-
-2. **Public and Private Keys**: Choose an integer \( e \) (public exponent) such that \( 1 < e < \phi(N) \) 
-and \( \gcd(e, \phi(N)) = 1 \). Then, compute the private exponent \( d \) as the modular inverse of \( e \) 
-mod \( \phi(N) \):
-
-\[
-d \times e \equiv 1 \pmod{\phi(N)}
-\]
-
-This is computed using the Extended Euclidean algorithm.
-
-3. **Message Signing**: To sign a message \( M \), compute the signature:
-
-\[
-S = M^e \mod N
-\]
-
-4. **Message Verification**: To verify a signature, compute:
-
-\[
-M' = S^d \mod N
-\]
-
-If \( M' = M \), the signature is valid.
-
-Example Usage
--------------
-
-Given two prime numbers \( p = 101 \) and \( q = 761 \), the module can generate an RSA key pair, sign a 
-message, and verify the signature as follows:
-
-```python
-p, q = 101, 761
-N = p * q
-e = 3
-message = 32
-
-encoded_message, private_key = sign_message(message, N, e, p, q)
-is_valid = verify_message(message, encoded_message, private_key, N)
-
-print(f"Was the message encoded correctly? {is_valid}")
+Signing applies the private exponent. Verification uses the public exponent.
 """
 
-from typing import Tuple
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives import serialization
+from math import gcd, isqrt
+
 
 def mod_exp(base: int, exp: int, mod: int) -> int:
-    """Performs modular exponentiation."""
+    """Compute base**exp modulo mod by repeated squaring."""
+    if exp < 0 or mod <= 1:
+        raise ValueError("Exponent must be nonnegative and modulus must exceed one")
     result = 1
-    base = base % mod
-
-    while exp > 0:
-        if exp % 2 == 1:
-            result = (result * base) % mod
-        exp = exp >> 1
-        base = (base * base) % mod
-
+    base %= mod
+    while exp:
+        if exp & 1:
+            result = result * base % mod
+        exp >>= 1
+        base = base * base % mod
     return result
 
 
-def extended_gcd(a: int, b: int) -> Tuple[int, int, int]:
-    """Performs the extended Euclidean algorithm."""
+def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
+    """Return x, y, g such that a*x + b*y = g = gcd(a, b) for positive inputs."""
     if b == 0:
         return 1, 0, a
-    else:
-        x, y, gcd = extended_gcd(b, a % b)
-        return y, x - (a // b) * y, gcd
+    x, y, divisor = extended_gcd(b, a % b)
+    return y, x - (a // b) * y, divisor
 
 
-def sign_message(message: int, modulus: int, public_exponent: int, p: int, q: int) -> Tuple[int, int]:
-    """Signs a message using RSA-like algorithm."""
+def _is_prime(value: int) -> bool:
+    """Trial division, suitable only for the small educational parameters here."""
+    if value < 2:
+        return False
+    return all(value % divisor for divisor in range(2, isqrt(value) + 1))
+
+
+def sign_message(
+    message: int, modulus: int, public_exponent: int, p: int, q: int
+) -> tuple[int, int]:
+    """Return a textbook signature and private exponent for small teaching keys."""
+    if p == q or not _is_prime(p) or not _is_prime(q):
+        raise ValueError("p and q must be distinct primes")
+    if modulus != p * q:
+        raise ValueError("Modulus must equal p * q")
     phi = (p - 1) * (q - 1)
-    _, private_exponent, _ = extended_gcd(public_exponent, phi)
-    private_exponent %= phi
+    if not 1 < public_exponent < phi or gcd(public_exponent, phi) != 1:
+        raise ValueError("Public exponent must be between 1 and phi and coprime to phi")
+    if not 0 <= message < modulus:
+        raise ValueError("Message must be in the range [0, modulus)")
+    inverse, _, _ = extended_gcd(public_exponent, phi)
+    private_exponent = inverse % phi
+    return mod_exp(message, private_exponent, modulus), private_exponent
 
-    signature = mod_exp(message, public_exponent, modulus)
-    return signature, private_exponent
 
-
-def verify_signature(original_message: int, signature: int, private_exponent: int, modulus: int) -> bool:
-    """Verifies the signed message."""
-    decoded_message = mod_exp(signature, private_exponent, modulus)
-    return decoded_message == original_message
+def verify_signature(
+    original_message: int, signature: int, public_exponent: int, modulus: int
+) -> bool:
+    """Verify a textbook signature using the public key, never the private key."""
+    if modulus <= 1 or public_exponent <= 1:
+        raise ValueError("Modulus and public exponent must exceed one")
+    if not 0 <= original_message < modulus or not 0 <= signature < modulus:
+        return False
+    return mod_exp(signature, public_exponent, modulus) == original_message
 
 
 def main() -> None:
-    p, q = 103, 787
-    modulus = p * q
-    public_exponent = 7
-    message = 42
-
-    signature, private_exponent = sign_message(message, modulus, public_exponent, p, q)
-    is_valid = verify_signature(message, signature, private_exponent, modulus)
-
-    print(f"Was the message signed and verified correctly? {is_valid}")
-
-    # Verify using an external library
-    private_key = rsa.RSAPrivateNumbers(
-        p=p,
-        q=q,
-        d=private_exponent,
-        dmp1=private_exponent % (p - 1),
-        dmq1=private_exponent % (q - 1),
-        iqmp=pow(q, -1, p),
-        public_numbers=rsa.RSAPublicNumbers(public_exponent, modulus)
-    ).private_key()
-
-    public_key = private_key.public_key()
-
-    signature_external = public_key.encrypt(
-        message.to_bytes((message.bit_length() + 7) // 8, 'big'),
-        padding.PKCS1v15()
-    )
-
-    verified_external = private_key.decrypt(
-        signature_external,
-        padding.PKCS1v15()
-    )
-
-    print(f"Was the external library verification successful? {verified_external == message.to_bytes((message.bit_length() + 7) // 8, 'big')}")
+    p, q = 61, 53
+    modulus, public_exponent, message = p * q, 17, 42
+    signature, _ = sign_message(message, modulus, public_exponent, p, q)
+    print("Educational textbook RSA only; do not use these keys or raw operations for security.")
+    print(f"Public key (n, e): ({modulus}, {public_exponent})")
+    print(f"Message: {message}; signature: {signature}")
+    print(f"Signature verified: {verify_signature(message, signature, public_exponent, modulus)}")
 
 
 if __name__ == "__main__":

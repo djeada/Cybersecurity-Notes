@@ -1,4 +1,4 @@
-## Security Applications
+# Security Applications
 
 ### Personal Firewalls (Host-based Firewalls)
 - **Windows Firewall:** Built-in firewall for Windows operating systems.

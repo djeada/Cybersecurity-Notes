@@ -1,4 +1,4 @@
-## Securing Network Media and Devices
+# Securing Network Media and Devices
 
 ### Wired Networks
 
@@ -139,4 +139,3 @@ Wired networks encompass various types of devices such as routers, switches, fir
 
 **Other Wireless Technologies:**
 - **Cell Signals:** Typically disabled within company premises to prevent unauthorized access.
-

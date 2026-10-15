@@ -1,16 +1,38 @@
-## Anonymous Browsing
+# Anonymous Browsing
 
-### Key Practices for Maintaining Anonymity
+Privacy limits collection and disclosure of information. Anonymity aims to keep
+activity from being linked to an identity. Neither is guaranteed by a single tool.
 
-1. **Avoid Assigning Identifiers:**
-   - **No Personal Identifiers:** Don’t link your browser activity to identifiable information like email addresses, social media accounts, or anything that can be traced back to you.
-   - **Separate Accounts:** If you must use accounts, create new ones with no personal information attached.
+## Begin with a threat model
 
-2. **Be Aware of Online Habits:**
-   - **Login Locations:** Avoid logging into accounts from recognizable or consistent locations, such as the same public Wi-Fi network or library.
-   - **Avoid Personal Photos:** Don’t upload real photos of yourself.
-   - **Style Consistency:** Be mindful of your writing style and other consistent behaviors that can create a recognizable pattern.
+Identify who you want privacy from, what they can observe, and which consequences
+matter. A website, network provider, employer, and compromised endpoint have
+different visibility.
 
-3. **Use a Live OS on a USB Stick:**
-   - **Live OS for Privacy:** Running a live OS like Tails from a USB stick ensures that no browsing history or data is stored on the computer.
-   - **MAC Address Randomization:** Using a Live OS like Tails, which randomizes your MAC address, further helps in avoiding tracking.
+- Signing into an identifying account links activity to that account even through
+  Tor or a VPN.
+- Cookies, browser fingerprints, downloads, metadata, and repeated behaviors can
+  connect sessions.
+- Private browsing mainly limits local history and session persistence. It does
+  not conceal activity from a network observer.
+- A VPN shifts trust to its operator. Tor distributes network trust, but does not
+  eliminate traffic correlation or protect a compromised endpoint.
+- MAC address randomization helps against some local-network tracking. It does not
+  hide an account identity or make internet activity anonymous.
+
+## Live systems and limits
+
+A privacy-focused live system such as Tails can reduce local traces and route
+supported traffic through Tor. It cannot guarantee anonymity, defeat malicious
+hardware, or erase records stored by remote services.
+
+Avoid opening identifying accounts during an activity whose anonymity matters.
+Treat unexpected files, browser changes, and optional persistence as changes to
+the threat model.
+
+See [live operating systems](live_os.md) and [browser security](securing_browser.md).
+
+## Sources
+
+- [Tails security warnings](https://tails.net/doc/about/warnings/index.en.html)
+- [Tor Browser: staying anonymous](https://tb-manual.torproject.org/staying-anonymous/)

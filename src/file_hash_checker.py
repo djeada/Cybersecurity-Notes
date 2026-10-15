@@ -1,50 +1,64 @@
+"""Calculate file digests and compare them with trusted expected values."""
+
+import argparse
 import hashlib
+import hmac
+import re
 import sys
-from typing import Optional
 
-def calculate_file_hash(file_path: str, hash_algorithm: str = 'sha256') -> str:
-    """Calculates the hash of a file using the specified hash algorithm."""
-    hash_func = getattr(hashlib, hash_algorithm)()
-    
+
+ALGORITHMS = ("sha256", "sha384", "sha512", "sha3_256", "sha3_384", "sha3_512", "blake2b", "blake2s")
+
+
+def calculate_file_hash(file_path: str, hash_algorithm: str = "sha256") -> str:
+    """Hash a file in bounded chunks; propagate input and filesystem errors."""
+    if hash_algorithm not in ALGORITHMS:
+        raise ValueError(f"Unsupported hash algorithm: {hash_algorithm}")
+    digest = hashlib.new(hash_algorithm)
+    with open(file_path, "rb") as source:
+        while chunk := source.read(8192):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_file_integrity(file_path: str, known_hash: str, hash_algorithm: str = "sha256") -> bool:
+    """Compare a digest with an expected hexadecimal value, ignoring letter case."""
+    calculated = calculate_file_hash(file_path, hash_algorithm)
+    expected = known_hash.strip().lower()
+    if len(expected) != len(calculated) or not re.fullmatch(r"[0-9a-f]+", expected):
+        return False
+    return hmac.compare_digest(calculated, expected)
+
+
+def main(args: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("file_path", help="File to hash")
+    parser.add_argument("known_hash", nargs="?", help="Trusted hexadecimal digest to compare")
+    parser.add_argument("--algorithm", choices=ALGORITHMS, default="sha256")
+    options = parser.parse_args(args)
+
+    expected = options.known_hash
+    if expected is not None:
+        expected = expected.strip().lower()
+        length = hashlib.new(options.algorithm).digest_size * 2
+        if len(expected) != length or not re.fullmatch(r"[0-9a-f]+", expected):
+            parser.error(f"expected a {length}-character hexadecimal {options.algorithm} digest")
+
     try:
-        with open(file_path, 'rb') as file:
-            while chunk := file.read(8192):
-                hash_func.update(chunk)
-        return hash_func.hexdigest()
-    except FileNotFoundError:
-        print(f"File not found: {file_path}")
-        sys.exit(1)
-    except IOError as e:
-        print(f"Error reading file: {file_path} - {e}")
-        sys.exit(1)
+        calculated = calculate_file_hash(options.file_path, options.algorithm)
+    except (OSError, ValueError) as error:
+        print(f"Cannot hash {options.file_path}: {error}", file=sys.stderr)
+        return 2
 
-def verify_file_integrity(file_path: str, known_hash: str, hash_algorithm: str = 'sha256') -> bool:
-    """Verifies the integrity of a file by comparing its hash to a known hash."""
-    calculated_hash = calculate_file_hash(file_path, hash_algorithm)
-    return calculated_hash == known_hash
+    print(f"{options.algorithm}: {calculated}")
+    if expected is None:
+        return 0
+    if hmac.compare_digest(calculated, expected):
+        print("File integrity verified: The hashes match.")
+        return 0
+    print("File integrity verification failed: The hashes do not match.")
+    return 1
 
-def main(args: Optional[list] = None) -> None:
-    """Main function to handle command-line arguments and perform hash calculation and verification."""
-    if args is None or len(args) < 1:
-        print("Usage: python file_hash_checker.py <file_path> [known_hash]")
-        sys.exit(1)
-
-    file_path = args[0]
-    known_hash = args[1] if len(args) > 1 else None
-
-    print(f"Calculating {hash_algorithm} hash for {file_path}...\n")
-    calculated_hash = calculate_file_hash(file_path)
-
-    print(f"Calculated Hash: {calculated_hash}")
-
-    if known_hash:
-        print(f"Known Hash:      {known_hash}")
-        if verify_file_integrity(file_path, known_hash):
-            print("File integrity verified: The hashes match.")
-        else:
-            print("File integrity verification failed: The hashes do not match.")
-    else:
-        print("No known hash provided for verification.")
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    sys.exit(main())

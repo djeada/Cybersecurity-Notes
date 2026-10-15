@@ -1,4 +1,4 @@
-## Phone Number Security
+# Phone Number Security
 
 Phone numbers are not only a primary means of communication but also a key identifier used in various online services for authentication, account recovery, and verification. As such, they are valuable targets for attackers in social engineering, SIM swapping, and other malicious activities. Understanding how phone numbers can be discovered, traced, and exploited is crucial for penetration testers and OSINT investigators.
 

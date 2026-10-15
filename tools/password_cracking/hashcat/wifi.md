@@ -123,5 +123,3 @@ hashcat -m 22000 10-digit-letters-wpa.hc22000 --increment --increment-min 10 --i
 - `--increment-max 12`: Sets the maximum length to 12 characters.
 - `-1 ?d?l?u`: Defines a custom character set including digits, lowercase, and uppercase letters.
 - `?1?1?1?1?1?1?1?1?1?1?1?1`: Uses the custom character set for each position in the password.
-
-

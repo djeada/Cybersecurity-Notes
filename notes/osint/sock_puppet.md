@@ -1,4 +1,4 @@
-## Sock Puppets
+# Sock Puppets
 
 A "sock puppet" refers to a fake online persona created to deceive or manipulate others. Sock puppets are commonly used in social engineering, OSINT investigations, or to covertly interact with individuals or organizations without revealing the true identity of the operator. Creating and managing sock puppets requires careful planning and adherence to security best practices to avoid detection and compromise.
 
@@ -37,5 +37,3 @@ A "sock puppet" refers to a fake online persona created to deceive or manipulate
 1. To avoid linking the sock puppet to your real identity, always use a separate browser and, ideally, a different IP address (e.g., via VPN or Tor) when operating the fake persona.
 2. Never use your personal phone, email, or any other identifiable information when creating or managing a sock puppet. Always use entirely separate, untraceable accounts and devices.
 3. Avoid searching for or interacting with people related to your real life when using a sock puppet. This could inadvertently link the fake persona back to you.
-
-

@@ -1,34 +1,48 @@
-## Digital Signatures and Certificates
+# Digital Signatures and Certificates
 
-### What is a Digital Signature?
+Digital signatures authenticate a message and detect modification. They do not
+hide the message's contents.
 
-- **Purpose:** Digital signatures are used to verify the authenticity and integrity of digital files, ensuring that they have not been altered and confirming the identity of the creator or modifier.
-  
-- **Mechanism:**
-  - **Asymmetric Cryptography:** Digital signatures rely on asymmetric cryptography, which uses a pair of keys: a private key (kept secret by the signer) and a public key (shared with others).
-  - **Signing Process:** The signer uses their private key to sign a file, generating a unique digital signature that is mathematically linked to the file's contents.
-  - **Verification Process:** Anyone with access to the signer's public key can use it to decrypt the digital signature, verifying that the file is authentic and has not been tampered with.
-  
-- **Legal Value:** In many jurisdictions, such as the UK, digital signatures carry the same legal standing as physical signatures.
+## Signing and verification
 
-#### Simplified Digital Signature Example
+The signer uses a **private key** with a defined signature scheme. A verifier uses
+the corresponding **public key**, the message, and the signature. Verification
+checks that the signature is valid for that message under that key; it does not
+decrypt the document.
 
-- **Encrypting with Private Key:** A document can be theoretically encrypted with the signer's private key, creating a digital signature.
-- **Verification with Public Key:** Others can decrypt the document using the signer's public key to confirm that the signature (and therefore the document) is authentic.
+For example, RSA-PSS combines hashing and an encoding scheme with RSA private
+and public operations. Other schemes, such as Ed25519, have their own construction;
+the phrase “encrypting a hash with a private key” is not a general definition.
 
-### Certificates – Establishing Identity and Trust
+A valid signature establishes a relationship to a key. Trusting the identity
+behind that key requires an authenticated key-distribution mechanism. Compromised
+keys, signing services, or endpoints can undermine that trust. Legal effect
+depends on applicable law and how the signature and identity are established.
 
-- **Purpose:** Digital certificates are used to establish identity and trust in digital communications, particularly in securing web traffic with HTTPS.
+## Certificates and HTTPS
 
-- **Use in HTTPS:**
-  - **Verification Process:** When you visit a website, your browser checks the server’s digital certificate to ensure it is the legitimate site, verifying the identity of the server.
-  - **Chain of Trust:** Digital certificates operate within a hierarchical structure known as a chain of trust:
-    - **Root Certificate Authority (CA):** Root CAs are trusted by your device or browser by default. These are at the top of the trust hierarchy.
-    - **Intermediate Certificates:** These certificates are issued by root CAs and are trusted because the root CA vouches for them.
-    - **End-Entity Certificates:** Also known as server or domain certificates, these are trusted because an intermediate CA vouches for them.
-  - **Trust Propagation:** Trust is propagated down the chain, with each certificate being trusted because the higher-level certificate that issued it is trusted.
+An X.509 certificate binds a public key to names or other identity information,
+signed by an issuer. A typical HTTPS chain contains a leaf certificate and one
+or more intermediates leading to a root trusted by the client.
 
-#### Obtaining HTTPS Certificates
+A client must validate the chain and hostname, validity dates, permitted usage,
+and applicable revocation policy. The server must also prove possession of the
+corresponding private key during authentication.
 
-- **Let’s Encrypt:** A widely used certificate authority, Let’s Encrypt provides free HTTPS certificates for websites, making it easier for site owners to implement secure communications.
-- **Recommendation:** If you manage a website, it's essential to set up HTTPS using a certificate authority like Let’s Encrypt to ensure security and user trust.
+A valid certificate for a domain does not establish that its content is honest.
+A phishing site can have a valid certificate for its own domain.
+
+## Operating certificates
+
+Automate issuance and renewal where practical, monitor failures and expiry,
+restrict private-key access, and replace compromised keys and certificates.
+Public CAs such as Let's Encrypt provide certificates through automated workflows.
+Private PKI can serve internal identities with a separately managed trust store.
+
+See [PKI and TLS](../basics/pki.md) and [RSA](rsa.md).
+
+## Sources
+
+- [RFC 5280: X.509 certificate and CRL profile](https://www.rfc-editor.org/rfc/rfc5280.html)
+- [cryptography RSA signing and verification](https://cryptography.io/en/latest/hazmat/primitives/asymmetric/rsa/)
+- [Let's Encrypt: how it works](https://letsencrypt.org/how-it-works/)

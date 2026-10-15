@@ -1,3 +1,5 @@
+# Dirb
+
 The image you provided shows a command that is being used in a terminal or command-line interface. The command is:
 
 ```bash
@@ -104,4 +106,3 @@ Let's say you are scanning a website and are only interested in finding resource
 ### Example Output:
 
 With `-N 404` specified, `dirb` will not display any results for URLs that result in a `404 Not Found` status. If the server returns `200 OK`, `403 Forbidden`, or any other status code, those will still be shown in the output.
-

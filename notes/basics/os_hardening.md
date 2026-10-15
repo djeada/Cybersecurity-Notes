@@ -1,4 +1,4 @@
-## OS Hardening
+# OS Hardening
 
 ### Motivation
 
@@ -18,8 +18,10 @@ Operating Systems (OS) are often vulnerable by default when initially installed.
 - **Application Blacklisting/Whitelisting:** Control which applications can run on the system.
 - **Service Configuration Commands:**
   - **Windows:** Use `services.msc`, `net stop`, and `sc stop` to manage services.
-  - **Linux:** Use `/etc/init.d/<service> stop`, `service <service> stop`, etc., for service management.
-  - **OSX:** Use the `kill` command to stop services.
+  - **Linux:** Use the service manager, such as `systemctl stop <service>` on systemd
+    systems. Stopping a service and disabling automatic startup are separate actions.
+  - **macOS:** Manage launch services with `launchctl`; killing a process alone
+    may cause the service manager to restart it.
 
 ---
 
@@ -37,7 +39,9 @@ Operating Systems (OS) are often vulnerable by default when initially installed.
 
 **Patches and Hotfixes:**
 - **Terminology:** The terms "hotfix" and "patch" are often used interchangeably.
-- **Update Strategy:** Disable automatic updates to synchronize versions and maintain control over the update process.
+- **Update Strategy:** Keep security updates enabled. For managed fleets, use staged
+  deployment with explicit deadlines and an emergency patch path; do not leave
+  updates disabled indefinitely. Track failures and verify the running version.
 
 ---
 
@@ -83,15 +87,25 @@ Patch management involves a structured approach to planning, testing, implementi
      - **ext4:** A robust and secure file system.
      - **Tools:** Use `fdisk -l` or `df -T` to manage and check file systems.
 
-**b) Hide Important Files:**
-   - **Purpose:** Protect system and personal files from unauthorized access.
+**b) Restrict Access to Important Files:**
+   - **Purpose:** Use filesystem permissions, access policies, and encryption where
+     appropriate. Marking a file hidden does not prevent unauthorized access.
 
 **c) Manage Hard Drives:**
    - **Tasks:**
      - **Delete Temp Files:** Regularly remove temporary files to free up space and reduce clutter.
      - **Verify System File Integrity:** Periodically check system files to ensure they have not been altered.
-     - **Defrag Hard Drives:** Optimize disk performance by defragmenting.
+     - **Storage Maintenance:** Follow OS and device guidance; routine manual SSD
+       defragmentation is not a security control.
      - **Backup Data:** Regularly back up important data to prevent data loss.
      - **Restore Points:** Create restore points to revert to a previous state in case of issues.
      - **Whole Disk Encryption:** Encrypt the entire disk to protect data at rest.
      - **Separate OS System and Personal Data:** Keep the OS and personal data on separate partitions or drives for better security and management.
+
+See [vulnerability management](vulnerability_management.md) for prioritization,
+verification, and exception tracking.
+
+## Sources
+
+- [CISA: update software](https://www.cisa.gov/secure-our-world/update-software)
+- [NIST SP 800-53: security and privacy controls](https://csrc.nist.gov/pubs/sp/800/53/r5/upd1/final)
