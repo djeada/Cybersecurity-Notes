@@ -11,6 +11,7 @@ security fundamentals, cryptography, OSINT, penetration testing, and defense.
 | [Tools](tools/README.md) | Burp Suite, Wireshark, Metasploit, and other practical references |
 | [Quizzes](quizzes/README.md) | General security, architecture, and forensics revision |
 | [Walkthroughs](walkthroughs/README.md) | TryHackMe and Hack The Box lab write-ups |
+| [CVE reports](cve_reports/README.md) | Deep dives on specific vulnerabilities, with confirmed facts kept separate from hypotheses |
 | [Python examples](src/README.md) | Small utilities, their dependencies, and usage |
 | [Learning resources](resources.md) | Standards, books, courses, blogs, and practice platforms |
 | [Certificates](certificates/README.md) | Course completion records |
