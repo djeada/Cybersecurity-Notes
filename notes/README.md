@@ -67,5 +67,8 @@ guided introduction, or browse a topic below.
 - [Passwords](pentesting/passwords/README.md)
 - [SQL injection](pentesting/sql_injections/README.md)
 
+See also the [CVE reports](../cve_reports/README.md) section for write-ups of
+specific vulnerabilities.
+
 Apply the [lab usage guidance](../README.md#using-the-practical-material) when
 working with the tool references and walkthroughs.
