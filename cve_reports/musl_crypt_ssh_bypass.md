@@ -102,6 +102,59 @@ VM or container you set up yourself — no specific build is provided here).
 Do not run password or authentication experiments against any system you do
 not own or have explicit permission to test.
 
+### Lab setup used to test this
+
+The reproduction behind this note used three isolated hosts (containers, in
+this case) on one private network: one running musl plus an OpenSSH build
+from before any length-based fix, one running the same stack after a
+length-based fix, and a third acting purely as the SSH client sending test
+attempts to the other two. No host ports were published and the network had
+no route to the internet, so the only thing reachable from the client was
+the two targets.
+
+```mermaid
+flowchart LR
+    subgraph net["Isolated network — no published ports, no internet egress"]
+        direction LR
+        client(["client host<br/>ssh password-auth attempts<br/>at varying password lengths"])
+        vuln["target A<br/>musl + OpenSSH, pre-fix build"]
+        fixed["target B<br/>musl + OpenSSH, length-check fix applied"]
+    end
+    client -- "same attempts, same accounts" --> vuln
+    client -- "same attempts, same accounts" --> fixed
+```
+
+Both targets carry the same two account types — one ordinary account with a
+real password hash, one account whose password field is a bare `*` marker —
+so that every password-length attempt below can be run unmodified against
+both targets and only the fix, not the setup, differs between the two
+results.
+
+### How each attempt was evaluated
+
+Every attempt is the same shape — a password of some length, sent to one of
+the two account types — and the diagram below is the decision tree the test
+matrix in the table further down walks through. The confirmed branches
+(a real hash comparing, and the musl bug firing on the PAM path) are backed
+by the sources at the bottom of this note; the non-PAM branch is the
+unverified hypothesis this note is explicit about.
+
+```mermaid
+flowchart TD
+    A["Password attempt, N bytes"] --> B{"N > 256 bytes?"}
+    B -- "No" --> C["crypt() returns a real hash<br/>(no bug involved)"]
+    C --> D{"Hash matches the<br/>stored field?"}
+    D -- "Yes — correct password,<br/>real-hash account" --> E["Login accepted"]
+    D -- "No — wrong password,<br/>or *-marked account" --> F["Login denied"]
+
+    B -- "Yes" --> G["crypt() returns the literal '*'<br/>CONFIRMED musl bug"]
+    G --> H{"Auth path"}
+    H -- "PAM-based (pam_unix)" --> I["PAM tries to erase '*'<br/>(a read-only string literal)<br/>CONFIRMED: crash / DoS"]
+    H -- "Non-PAM, direct crypt() compare<br/>— UNVERIFIED hypothesis" --> J{"Stored field is<br/>also exactly '*'?"}
+    J -- "Yes" --> K["Compare succeeds —<br/>HYPOTHESIZED login accepted,<br/>no real password ever set"]
+    J -- "No" --> F
+```
+
 **1. Confirm the root cause directly, with no authentication service
 involved at all:**
 
