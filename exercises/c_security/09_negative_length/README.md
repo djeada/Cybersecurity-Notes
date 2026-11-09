@@ -1,45 +1,72 @@
-# 09 — Converting a negative length to size_t
+# 09 — Making a negative length pass an upper-bound check
 
-[All C security exercises](../README.md)
+[All exercises and impact guide](../README.md#what-an-attacker-actually-gains)
 
 **Weakness:** [CWE-195](https://cwe.mitre.org/data/definitions/195.html) ·
-**Before the patch:** [vulnerable.c](vulnerable.c) ·
-**After the patch:** [fixed.c](fixed.c)
+**Before:** [vulnerable.c](vulnerable.c) · **After:** [fixed.c](fixed.c)
 
-## Exploit
+## Attacker control and objective
 
-The guard rejects only `length > 32`, so `-1` passes. Converting that
-signed value to `size_t` produces `SIZE_MAX`, and `memcpy()` attempts an
-enormous copy between two small arrays. `atoi()` also makes malformed input
-difficult to distinguish from a valid zero.
+The attacker controls the text parsed as a copy length. The source
+bytes are the program's fixed `example` buffer. The objective is to pass a
+check written for a signed number and then trigger a huge unsigned copy.
 
-## Reproduce
+## How the attack works
 
-Run these commands from the repository root in an unprivileged Linux lab.
-Commands that expose a memory error or reject input are expected to exit nonzero.
+1. `atoi("-1")` returns the signed integer -1.
+2. `if (length > 32)` does not reject it: -1 is smaller than 32.
+3. Converting -1 to unsigned `size_t` produces `SIZE_MAX`. On 64-bit Linux
+   that is 18,446,744,073,709,551,615.
+4. `memcpy(output, source, (size_t)length)` receives that enormous length
+   even though both arrays have only 32 bytes. The invalid range affects
+   the source and destination, rather than selecting a single useful byte.
+
+## Run the attack and compare the patch
+
+Use Bash from the repository root. These are local programs run as your
+ordinary account. Rejection and sanitizer failures intentionally return nonzero;
+run the commands individually or in a shell without `set -e`.
 
 ```sh
 make -C exercises/c_security asan
-./exercises/c_security/build-asan/09_negative_length/vulnerable -1
-./exercises/c_security/build-asan/09_negative_length/fixed -1
-./exercises/c_security/build-asan/09_negative_length/fixed 7
+LAB_BIN=./exercises/c_security/build-asan/09_negative_length
+python3 -c 'import ctypes; print("size_t(-1)=", ctypes.c_size_t(-1).value)'
+"$LAB_BIN/vulnerable" -1
+printf 'vulnerable exit=%s\n' "$?"
+"$LAB_BIN/fixed" -1
+printf 'fixed rejection exit=%s\n' "$?"
+"$LAB_BIN/fixed" 7
 ```
 
-AddressSanitizer diagnoses `negative-size-param` for the vulnerable copy.
-The fixed version rejects `-1` before copying and prints `example` for `7`.
-Other toolchains can report the invalid copy differently.
+The Python command displays the conversion on your platform. The
+vulnerable run normally reports `negative-size-param: (size=-1)` from
+AddressSanitizer's copy interceptor, which recognizes the huge size. The
+patched run prints `rejected: invalid length`, exits 1, and prints `example`
+for the valid length 7. Other runtimes can diagnose the invalid copy differently.
 
-## Fix
+## What the attacker gains
 
-Use `strtol()` with `errno` and an end pointer. Reject an empty conversion,
-trailing text, range errors, and lengths outside 0–32 before converting to
-`size_t`. A 33-byte zero-initialized destination leaves room for termination
-even when all 32 source bytes are copied.
+**Demonstrated:** a validation bypass that supplies an invalid size to a
+memory operation, followed by sanitizer termination. It does not copy a
+chosen secret to an attacker, choose destination bytes, or run a command.
 
-## Check the patch
+Without instrumentation, this attempt can crash during invalid reads or
+writes. Whether a deployed service exposes that path and loses availability
+is a separate question. No controlled write target or execution chain is
+implemented here, so a full-system-control claim is unsupported.
 
-Check -1, 0, 7, 32, 33, nonnumeric input, and numeric input with trailing
-text. Only complete conversions in the allowed range should reach `memcpy()`.
+## Why the patch stops this attack
 
-The [regression suite](../tests/test_exercises.py) checks the fixed behavior.
-See the [exercise guide](../README.md#build-and-check) for build and test commands.
+Parse with `strtol()` so conversion errors and trailing text are
+detectable. Validate the complete conversion and `0 <= length <= 32` before
+converting to `size_t`. A 33-byte zero-initialized destination also preserves
+room for NUL termination when all 32 source bytes are copied.
+
+## Verify the result
+
+Lengths 0, 7, and 32 should succeed; -1 and 33 must fail. Empty text,
+trailing garbage, and an out-of-range number must also fail before the copy.
+Validate the signed value before conversion, not after it has become huge.
+
+The [regression suite](../tests/test_exercises.py) checks the corresponding
+fixed behavior. Run `make -C exercises/c_security test test-asan` for all exercises.

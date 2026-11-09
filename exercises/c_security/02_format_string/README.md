@@ -1,49 +1,83 @@
-# 02 — Interpreting input as a printf format
+# 02 — Reading an internal value through printf
 
-[All C security exercises](../README.md)
+[All exercises and impact guide](../README.md#what-an-attacker-actually-gains)
 
 **Weakness:** [CWE-134](https://cwe.mitre.org/data/definitions/134.html) ·
-**Before the patch:** [vulnerable.c](vulnerable.c) ·
-**After the patch:** [fixed.c](fixed.c)
+**Before:** [vulnerable.c](vulnerable.c) · **After:** [fixed.c](fixed.c)
 
-## Exploit
+## Attacker control and objective
 
-`printf(argv[1])` lets the caller supply formatting instructions. `%%`
-changes the output even without extra arguments. Conversions such as `%p`
-would try to consume arguments that the program never supplied, causing
-undefined behavior that may expose process data or crash the program.
+The attacker controls the format text in `argv[1]`. The objective is to
+make the logger print an internal value that the attacker did not supply.
+This lab deliberately passes one dummy internal string as a formatting
+argument so that the disclosure is reproducible without guessing addresses.
 
-## Reproduce
+## How the attack works
 
-Run these commands from the repository root in an unprivileged Linux lab.
-Commands that expose a memory error or reject input are expected to exit nonzero.
+1. The program holds `internal_note = "DEMO_PRIVATE_VALUE"`.
+2. It calls `printf(argv[1], internal_note)`, letting untrusted text specify
+   how the internal argument is used.
+3. The attacker supplies `private=%s`. `%s` consumes the pointer argument and
+   reads the pointed-to string until its NUL terminator.
+4. The logger prints the internal value to the attacker-visible output.
+
+The attacker never supplied `DEMO_PRIVATE_VALUE` in the command. The bug is
+giving input the authority to choose formatting operations.
+
+## Run the attack and compare the patch
+
+Use Bash from the repository root. These are local programs run as your
+ordinary account. Rejection and sanitizer failures intentionally return nonzero;
+run the commands individually or in a shell without `set -e`.
 
 ```sh
 make -C exercises/c_security all
-./exercises/c_security/build/02_format_string/vulnerable 'hello %%'
-./exercises/c_security/build/02_format_string/fixed 'hello %%'
-./exercises/c_security/build/02_format_string/fixed 'hello %p'
+LAB_BIN=./exercises/c_security/build/02_format_string
+"$LAB_BIN/vulnerable" hello
+"$LAB_BIN/vulnerable" 'private=%s'
+"$LAB_BIN/fixed" 'private=%s'
+"$LAB_BIN/vulnerable" 'hello %%'
+"$LAB_BIN/fixed" 'hello %%'
 ```
 
-The vulnerable program prints `hello %`; the fixed program prints the
-literal `hello %%`. It also prints `hello %p` literally. The `%%` example
-demonstrates interpretation without relying on a missing variadic argument
-or claiming that a particular address can be leaked.
+The disclosure and its fixed counterpart are exactly:
 
-## Fix
+```text
+private=DEMO_PRIVATE_VALUE
+private=%s
+```
 
-Keep the format string constant: `printf("%s\n", argv[1])`. The input is
-supplied only as the string argument, so percent sequences inside it are data.
+The last pair prints `hello %` and `hello %%`, respectively. `%s` performs
+the read in the vulnerable case; `%%` only changes formatting.
 
-## Check the patch
+## What the attacker gains
 
-Check plain text, `%%`, `%p`, and `%n` against the fixed version. Each must
-be printed literally. Compile with `-Wformat-security` to identify the unsafe
-call in the vulnerable source.
+**Demonstrated:** disclosure of one internal dummy string through a valid
+pointer already present in the formatting arguments. The process continues;
+no memory write, shell, UID change, or arbitrary code execution is shown.
 
-The [regression suite](../tests/test_exercises.py) checks the fixed behavior.
-See the [exercise guide](../README.md#build-and-check) for build and test commands.
+This is not an arbitrary-address read: the attacker does not choose the
+pointer argument. Other format-string exploits depend on available arguments,
+address knowledge, and writable targets. In particular, `%n` requires an
+appropriate writable integer pointer; no such target is provided by this
+exercise. Extra conversions without corresponding arguments are undefined
+behavior, not a reliable method for reading a named variable.
 
-## Reference
+## Why the patch stops this attack
 
-[Linux printf manual: format conversions and untrusted formats](https://man7.org/linux/man-pages/man3/printf.3.html).
+`printf("%s\n", argv[1])` fixes the format in the program. The attacker
+string becomes the data argument, and the internal note is no longer passed
+to the formatter. The `%s` inside the attack text is printed literally.
+
+## Verify the result
+
+Try `private=%s`, `hello %%`, and `test %n` against `fixed.c`. All must be
+printed literally, and none may reveal `DEMO_PRIVATE_VALUE`. Keep the dummy
+value synthetic; the demonstration does not need real credentials.
+
+The [regression suite](../tests/test_exercises.py) checks the corresponding
+fixed behavior. Run `make -C exercises/c_security test test-asan` for all exercises.
+
+## References
+
+[Linux printf manual: format argument interpretation](https://man7.org/linux/man-pages/man3/printf.3.html).
