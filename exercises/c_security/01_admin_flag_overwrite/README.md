@@ -1,52 +1,110 @@
-# 01 — Overwriting an adjacent admin flag
+# 01 — Changing an application admin flag
 
-[All C security exercises](../README.md)
+[All exercises and impact guide](../README.md#what-an-attacker-actually-gains)
 
 **Weakness:** [CWE-787](https://cwe.mitre.org/data/definitions/787.html) ·
-**Before the patch:** [vulnerable.c](vulnerable.c) ·
-**After the patch:** [fixed.c](fixed.c)
+**Before:** [vulnerable.c](vulnerable.c) · **After:** [fixed.c](fixed.c)
 
-## Exploit
+## Attacker control and objective
 
-The account stores an eight-byte username next to an authorization flag.
-`strcpy(account.username, argv[1])` has no destination-size argument. A long
-username writes beyond the array and can corrupt the flag used by the later
-authorization decision. Input data has crossed into security state.
+The attacker supplies the username in `argv[1]`, including its length and
+bytes. The objective is to change `account.is_admin` without an authentication
+check. The victim's mistake is trusting that the username fits eight bytes.
 
-## Reproduce
+## How the attack works
 
-Run these commands from the repository root in an unprivileged Linux lab.
-Commands that expose a memory error or reject input are expected to exit nonzero.
+1. The program initializes an account with `is_admin = 0`.
+2. `strcpy()` copies the entire input plus its NUL terminator into `username[8]`.
+3. On a common Linux ABI, `is_admin` starts at offset 8. Nine `A` bytes write
+   past the username into that integer; the terminating NUL lands at offset 9.
+4. The program evaluates the corrupted value with `account.is_admin != 0` and
+   prints `admin=1`.
+
+For a little-endian, four-byte `int` at offset 8, the relevant bytes are:
+
+| Offset | Intended storage | After nine `A` bytes and the NUL |
+| --- | --- | --- |
+| 0–7 | Username | Eight `0x41` bytes |
+| 8 | First byte of `is_admin` | `0x41` |
+| 9 | Second byte of `is_admin` | `0x00`, the input terminator |
+| 10–11 | Remaining integer bytes | `0x00 0x00` from initialization |
+
+That integer becomes 65, which is true. The printed `1` is a boolean result,
+not necessarily the raw value stored in the integer.
+
+## Run the attack and compare the patch
+
+Use Bash from the repository root. These are local programs run as your
+ordinary account. Rejection and sanitizer failures intentionally return nonzero;
+run the commands individually or in a shell without `set -e`.
 
 ```sh
 make -C exercises/c_security all asan
-./exercises/c_security/build/01_admin_flag_overwrite/vulnerable AAAAAAAAA
-./exercises/c_security/build/01_admin_flag_overwrite/fixed AAAAAAAAA
-./exercises/c_security/build/01_admin_flag_overwrite/fixed Alice
+LAB_BIN=./exercises/c_security/build/01_admin_flag_overwrite
+"$LAB_BIN/vulnerable" Alice
+LAB_PAYLOAD=$(python3 -c 'print("A" * 9)')
+"$LAB_BIN/vulnerable" "$LAB_PAYLOAD"
+"$LAB_BIN/fixed" "$LAB_PAYLOAD"
+printf 'fixed rejection exit=%s\n' "$?"
+"$LAB_BIN/fixed" Alice
+
+# A larger input crosses the whole stack object, for sanitizer evidence.
 ./exercises/c_security/build-asan/01_admin_flag_overwrite/vulnerable "$(python3 -c 'print("A" * 64)')"
 ```
 
-On a typical Linux layout, nine `A` characters change the vulnerable
-program's output to `admin=1`. The fixed program rejects that username and
-prints `admin=0` for `Alice`.
+On the layout described above, the first two vulnerable runs print
+`admin=0` and `admin=1`. The fixed program prints
+`rejected: username too long`, exits 1, and still prints `admin=0` for `Alice`.
+The last command should report `stack-buffer-overflow`.
 
-The overwrite is undefined behavior: padding, optimization, and the compiler
-can change the visible result. An overwrite confined to members of the same
-struct may escape AddressSanitizer. The separate 64-character input crosses
-the whole stack object and should produce a `stack-buffer-overflow` report.
-Neither observation demonstrates arbitrary code execution.
+A small overwrite inside a struct can escape AddressSanitizer because it
+stays within the enclosing object. C does not guarantee the result of this
+out-of-bounds copy; use the debugger below to check your compiler's actual
+layout rather than treating the offset table as a portable ABI guarantee.
 
-## Fix
+## Inspect the overwritten variable with GDB
 
-Measure the input before copying. Reject `length >= sizeof account.username`
-so that the terminating NUL also fits, then copy exactly `length + 1` bytes
-with `memcpy`. The copy can no longer reach `is_admin`.
+This optional command stops just after the copy in the current source and
+inspects the victim's state. GDB is an observer here, not the attack payload.
 
-## Check the patch
+```sh
+gdb -q -batch \
+  -ex 'set disable-randomization off' \
+  -ex 'break 01_admin_flag_overwrite/vulnerable.c:18' \
+  -ex 'run AAAAAAAAA' \
+  -ex 'print (char *)&account.is_admin - (char *)&account' \
+  -ex 'print account.is_admin' \
+  -ex 'x/12bx &account' \
+  ./exercises/c_security/build/01_admin_flag_overwrite/vulnerable
+```
 
-Try usernames of lengths 0, 7, 8, and 9. The first two fit; the last two
-must be rejected. Inspect `offsetof(struct Account, is_admin)` in a debugger
-to relate your platform's member layout to the vulnerable result.
+On the ABI above, the first two expressions produce 8 and 65. This explains
+exactly which variable changed instead of inferring it from a crash.
 
-The [regression suite](../tests/test_exercises.py) checks the fixed behavior.
-See the [exercise guide](../README.md#build-and-check) for build and test commands.
+## What the attacker gains
+
+**Demonstrated:** corruption of one application variable, making its toy
+admin decision true. This program only prints that decision; it has no
+protected admin operation to invoke.
+
+The process's Linux UID, filesystem permissions, and ability to execute
+commands do not change. This is not a root shell. In a larger application,
+such a flag could authorize operations if later code trusted it. Turning a
+different overwrite into instruction-pointer control would require a separate
+exploit involving a reachable target and the relevant memory layout and
+mitigations; this command does not demonstrate that.
+
+## Why the patch stops this attack
+
+`fixed.c` checks `length >= sizeof account.username` before copying.
+Rejecting equality reserves space for the terminator. Copying exactly
+`length + 1` checked bytes cannot reach the admin flag.
+
+## Verify the result
+
+Lengths 0 and 7 fit. Lengths 8 and 9 must be rejected. With eight `A`
+characters the vulnerable terminator may overwrite a flag byte with zero,
+leaving `admin=0`; an unchanged output does not prove that no overflow occurred.
+
+The [regression suite](../tests/test_exercises.py) checks the corresponding
+fixed behavior. Run `make -C exercises/c_security test test-asan` for all exercises.

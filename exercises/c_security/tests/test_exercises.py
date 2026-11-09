@@ -31,7 +31,9 @@ class SecurityExerciseTests(unittest.TestCase):
     def test_format_string_is_literal(self):
         slug = "02_format_string"
         self.assertEqual("hello %\n", program(slug, "vulnerable", "hello %%").stdout)
-        for text in ("hello %%", "test %p", "test %n"):
+        self.assertEqual("private=DEMO_PRIVATE_VALUE\n",
+                         program(slug, "vulnerable", "private=%s").stdout)
+        for text in ("hello %%", "private=%s", "test %p", "test %n"):
             result = program(slug, "fixed", text)
             self.assertEqual(0, result.returncode)
             self.assertEqual(text + "\n", result.stdout)
@@ -44,6 +46,15 @@ class SecurityExerciseTests(unittest.TestCase):
             self.assertEqual("MISSING\n", program(slug, "fixed", attack, cwd=directory).stdout)
             (pathlib.Path(directory) / "file with spaces").touch()
             self.assertEqual("EXISTS\n", program(slug, "fixed", "file with spaces", cwd=directory).stdout)
+            marker = pathlib.Path(directory) / "proof.txt"
+            command = 'missing; id; printf "CONTROLLED\\n" > proof.txt; #'
+            vulnerable = program(slug, "vulnerable", command, cwd=directory)
+            self.assertEqual(0, vulnerable.returncode)
+            self.assertIn("uid=", vulnerable.stdout)
+            self.assertEqual("CONTROLLED\n", marker.read_text())
+            marker.unlink()
+            self.assertEqual("MISSING\n", program(slug, "fixed", command, cwd=directory).stdout)
+            self.assertFalse(marker.exists())
 
     def test_directory_traversal_rejected(self):
         slug = "04_path_traversal"

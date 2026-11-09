@@ -18,8 +18,9 @@ A sanitizer report establishes a memory error, not arbitrary code execution.
 
 ## Build and check
 
-Requirements: Linux, GCC or Clang with C11 support, GNU Make, and Python 3.10 or
-newer. The tests use only Python's standard library. The random-token fix uses
+Requirements: Linux, GCC or Clang with C11 support, GNU Make, Bash, standard
+Linux utilities (`id`, `date`, `seq`, `mktemp`), and Python 3.10 or newer.
+The tests use only Python's standard library. The random-token fix uses
 Linux `getrandom()`; the filesystem fixes use POSIX descriptor-relative APIs.
 
 Run from the repository root:
@@ -75,11 +76,68 @@ exercise's documented output rather than assuming all commands should succeed.
 | [14 — Predictable random token](14_predictable_token/README.md) | [CWE-338](https://cwe.mitre.org/data/definitions/338.html) | [vulnerable.c](14_predictable_token/vulnerable.c) | [fixed.c](14_predictable_token/fixed.c) |
 | [15 — Symlink report overwrite](15_temp_file_symlink/README.md) | [CWE-59](https://cwe.mitre.org/data/definitions/59.html) | [vulnerable.c](15_temp_file_symlink/vulnerable.c) | [fixed.c](15_temp_file_symlink/fixed.c) |
 
+## What an attacker actually gains
+
+These programs model a victim processing untrusted input. In this local lab,
+you play both roles: the attack is the argument or filesystem entry you supply;
+launching the executable stands in for the victim handling it. None of these
+programs listens on a network, changes its UID, or implements a real login or
+password-reset service. Keep the lab unprivileged and use the dummy files shown
+in the walkthroughs.
+
+Read each outcome at the boundary it actually crosses:
+
+- **Application state or authorization:** a flag or password check changes what
+  the application would allow. An application's admin role is separate from the
+  operating system's root account.
+- **Information disclosure:** bytes reach attacker-visible output. Reading beyond
+  an object is a memory error; it becomes a demonstrated disclosure only when
+  those extra bytes are actually exposed.
+- **File access:** a victim reads or overwrites a path using its existing file
+  permissions. This can violate its interface's policy without bypassing Unix
+  access checks.
+- **Command execution:** attacker-selected commands run with the authority
+  available to the process executing them. `id` shows that authority in exercise 03.
+- **Process failure:** a sanitizer or allocator terminates the program. This
+  establishes a failing operation; a remote denial of service needs an exposed
+  service and a reachable trigger that these CLI programs do not provide.
+
+| Exercise | What the attacker supplies or triggers | Demonstrated result | What is not established |
+| --- | --- | --- | --- |
+| [01](01_admin_flag_overwrite/README.md) | Nine-byte username | Adjacent toy admin flag becomes true on the documented ABI | Linux root, a shell, or a protected admin action |
+| [02](02_format_string/README.md) | `private=%s` format text | Reads the supplied internal dummy string through printf | An arbitrary-address read, a write, or code execution |
+| [03](03_command_injection/README.md) | Filename containing `; id; ...; #` | Shell commands execute and write a proof file as the lab account | Automatic elevation beyond that account |
+| [04](04_path_traversal/README.md) | `../private.txt` or a symlink name | First line of a readable file outside the intended directory | Reading files the victim cannot open, writing, or a shell |
+| [05](05_heap_overflow/README.md) | Thirty-byte message | Heap write beyond a sixteen-byte allocation; sanitizer abort | A chosen neighboring target or instruction-pointer control |
+| [06](06_use_after_free/README.md) | Any contact name | Read after free; sanitizer abort | Controlled allocation reuse or a chosen secret leak |
+| [07](07_double_free/README.md) | Invocation of an unconditional cleanup path | A duplicate free; sanitizer/allocator abort | An attacker-controlled argument or allocator takeover |
+| [08](08_integer_truncation/README.md) | Count `4100` | Allocates 64 bytes, attempts a 65,600-byte write of `X` | Attacker-selected write contents or a useful target |
+| [09](09_negative_length/README.md) | Length `-1` | Huge invalid copy length; sanitizer abort | A controlled memory disclosure or execution primitive |
+| [10](10_off_by_one/README.md) | Invocation of an unconditional loop | One-byte out-of-bounds write of `A` | Attacker-selected byte/index or a changed security decision |
+| [11](11_unterminated_string/README.md) | Eight-character username | Out-of-bounds string read; sanitizer abort | Reliable disclosure of a named secret |
+| [12](12_packet_length/README.md) | Claimed payload length `200` | Read beyond a three-byte payload; sanitizer abort | Data exfiltration: the copied bytes are never output |
+| [13](13_prefix_auth/README.md) | Empty or prefix password | Toy check prints `ACCESS GRANTED` | A real account session, shell, or root privileges |
+| [14](14_predictable_token/README.md) | Guessed token-generation time | A short seed search reproduces a generated token | Account takeover without a reset verifier and accepted guesses |
+| [15](15_temp_file_symlink/README.md) | Pre-created report symlink | Victim replaces a chosen writable lab file's contents with `REPORT` | Arbitrary contents, elevated permissions, or command execution |
+
+The memory-corruption rows describe the demonstrated read/write and failure.
+A memory bug can support a stronger exploit in a larger program, but that
+requires a useful target, attacker influence over the relevant state, and a
+working chain to an unauthorized effect. “Buffer overflow” alone is not evidence
+of full system control. The individual READMEs say which pieces are absent.
+
+For a class, start with 13, 02, 03, 04, and 15 to establish visible authorization,
+disclosure, command, and filesystem outcomes. Then use 01 and the memory examples
+to trace bytes, sizes, and object lifetimes. The READMEs for 07 and 10 explicitly
+identify unconditional bugs rather than inventing malicious inputs they do not
+accept.
+
 ## Working through an exercise
 
-Read the exploit explanation, run the reproduction, and compare the two code
-versions. Repeat the failing input against the fixed version, then try the
-boundary cases described in its README. Exercises 04 and 15 include a temporary
+Identify what the attacker controls and the intended boundary. Follow the
+walkthrough and compare its observed output with the stated gain, then compare
+the two code versions. Repeat the failing input against the fixed version, then
+try the boundary cases described in its README. Exercises 04 and 15 include a temporary
 directory setup because their programs resolve paths relative to the current
 working directory; keep that setup when reproducing them.
 
