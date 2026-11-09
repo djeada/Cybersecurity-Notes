@@ -22,3 +22,14 @@ jobs:
         run: python scripts/check_notes.py
       - name: Run offline regression tests
         run: python -m unittest discover -s tests -v
+
+  c-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Build and test C security exercises
+        run: make -C exercises/c_security test
+      - name: Check memory errors and fixed versions with sanitizers
+        run: make -C exercises/c_security test-asan

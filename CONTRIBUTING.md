@@ -54,3 +54,11 @@ the check deliberately runs offline. Tests cover the repaired Python examples.
 
 Before submitting, review `git diff --check` and the rendered Markdown. For a
 factual change, explain the corrected behavior and cite the supporting source.
+
+For changes to the C security exercises, also build and test both code versions
+on Linux with a C11 compiler, Make, and Python 3:
+
+```bash
+make -C exercises/c_security test
+make -C exercises/c_security test-asan
+```
