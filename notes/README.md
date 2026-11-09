@@ -33,6 +33,7 @@ guided introduction, or browse a topic below.
 ## Application security and defense
 
 - [Developing secure applications](basics/developing_secure_apps.md)
+- [C security exercises: vulnerable and fixed code](../exercises/c_security/README.md)
 - [Running applications securely](basics/running_apps_securely.md)
 - [Web application and API security](basics/web_application_security.md)
 - [Malware](basics/malware.md)

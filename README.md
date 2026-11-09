@@ -11,6 +11,7 @@ security fundamentals, cryptography, OSINT, penetration testing, and defense.
 | [Tools](tools/README.md) | Burp Suite, Wireshark, Metasploit, and other practical references |
 | [Quizzes](quizzes/README.md) | General security, architecture, and forensics revision |
 | [Walkthroughs](walkthroughs/README.md) | TryHackMe and Hack The Box lab write-ups |
+| [C security exercises](exercises/c_security/README.md) | 15 vulnerable/fixed code pairs with exploit and patch explanations |
 | [CVE reports](cve_reports/README.md) | Deep dives on specific vulnerabilities, with confirmed facts kept separate from hypotheses |
 | [Python examples](src/README.md) | Small utilities, their dependencies, and usage |
 | [Learning resources](resources.md) | Standards, books, courses, blogs, and practice platforms |
@@ -36,7 +37,8 @@ security fundamentals, cryptography, OSINT, penetration testing, and defense.
    [incident response](notes/basics/incident_response.md), and
    [digital forensics](notes/basics/digital_forensics.md).
 5. **Practice:** Use the tool references in an authorized lab, work through a
-   walkthrough, then revisit the quizzes.
+   walkthrough or the [C security exercises](exercises/c_security/README.md),
+   then revisit the quizzes.
 
 ## Using the practical material
 
@@ -60,6 +62,13 @@ python -m unittest discover -s tests -v
 
 The documentation check validates local file links, heading anchors, document
 titles, and fenced code blocks. It does not make network requests or run lab tools.
+
+The C exercises additionally require Linux, a C11 compiler, and Make:
+
+```bash
+make -C exercises/c_security test
+make -C exercises/c_security test-asan
+```
 
 ## License
 
